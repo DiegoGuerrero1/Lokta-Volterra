@@ -9,4 +9,4 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Proyecto final Ecuaciones Diferenciales Ordinarias: Modelado 
+# Proyecto final Ecuaciones Diferenciales Ordinarias: Ajustando el modelo de Lotka - Volterra a datos de una serie de tiempo con el paquete gauseR. 
