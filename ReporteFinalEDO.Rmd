@@ -11,11 +11,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Proyecto final Ecuaciones Diferenciales Ordinarias: Ajustando el modelo de Lotka - Volterra a datos de una serie de tiempo con el paquete gauseR. 
 
+*Abstract: *
+## DESCRIPCIÓN DEL ESCENARIO 
+### Introducción 
+## Ajustando el modelo matemático a los datos 
+### Parte 1: Crecimiento logístico de una especie 
+
+
 ```{r}
 library(gauseR)
 data("gause_1934_science_f02_03")
 Paramecium_caudatum = gause_1934_science_f02_03
-
+plot(Volume_Species1~Day.data<-Paramecium_caudatum)
 
 ```
 
