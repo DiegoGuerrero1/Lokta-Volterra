@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(gauseR)
 data("gause_1934_science_f02_03")
 Paramecium_caudatum = gause_1934_science_f02_03
-plot(Volume_Species1~Day.data<-Paramecium_caudatum)
+plot(Volume_Species1~Day.data<-Paramecium_caudatum) 
 
 ```
 
