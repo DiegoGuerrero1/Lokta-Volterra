@@ -11,18 +11,70 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Proyecto final Ecuaciones Diferenciales Ordinarias: Ajustando el modelo de Lotka - Volterra a datos de una serie de tiempo con el paquete gauseR. 
 
-*Abstract: *
+*Resumewn: *
 ## DESCRIPCIÓN DEL ESCENARIO 
 ### Introducción 
 ## Ajustando el modelo matemático a los datos 
 ### Parte 1: Crecimiento logístico de una especie 
 
+Se utilizará el dataset **Paramecium caudatum** incluido en el paquete de gauseR.Se trata de una especie protista unicelular en el phylum Ciliphora, esta especie es muy abundante en ambientes marinos, salobres y agua dulce. Gause ha crecido esta especie en un monocultivo, y la información se puede encontrar en el paquete gauseR bajo el nombre de gause_1934_sciende_f02_03. Este archivo contiene datos de ambas especies **Paramecium caudatum** y **Paramecium aurelia** en un monocultivo y mezclados.
+
+## Visualizando los datos de monocultivo
 
 ```{r}
 library(gauseR)
+require(gauseR)
+library(ggplot2)
+
 data("gause_1934_science_f02_03")
-Paramecium_caudatum = gause_1934_science_f02_03
-plot(Volume_Species1~Day.data<-Paramecium_caudatum) 
+#Exploramos nuestros datos 
+View(gause_1934_science_f02_03)
+summary(gause_1934_science_f02_03)
+
+Paramecium_caudatum <- gause_1934_science_f02_03[gause_1934_science_f02_03$Treatment == "Pc",] #Creamos un subset de sólo los monocultivos de Paraceum Caudatum
+
+View(Paramecium_caudatum) #Checamos dataset, debería contener sólo datos de Paraceum caudatum.
+names(Paramecium_caudatum) #Contiene columnas "Day" y "Volume_Species1"
+#Graficamos las columnas, volumen... (y) vs Day(x)
+class(Paramecium_caudatum)
+plot(Paramecium_caudatum$Volume_Species1~Paramecium_caudatum$Day) #Graficamos sin ggplot2
+
+#Para visualizar mejor los datos se utilizará ggplot2.
+
+ggplot(Paramecium_caudatum, aes(Day, Volume_Species1))+
+  geom_point() #graficamos con puntos por medio de ggplot2
+
+ggplot(Paramecium_caudatum, aes(Day, Volume_Species1))+
+  geom_path() #graficamos con linea para ver mejor la tendencia de los datos 
+
+
 
 ```
+
+se puede observar que los datos presentan un crecimiento logísitico. Considerando la ecuación siquiente: 
+$$ \frac{dN}{dt} = rN(1 - \frac{N}{K})=N(r - sN) $$
+
+
+
+Donde r es la taza de crecimiento intrínsica (la tasa neta en la cual los nuevos individuos son itroducidos a la población cuando la pobalción esta esparcida desvanecidamente), **s** es la dependencia del parametro de densidad (el cual refleja como el tamaño de la población afecta la tasa en general)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
