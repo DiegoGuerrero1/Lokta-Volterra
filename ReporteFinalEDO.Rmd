@@ -131,7 +131,23 @@ parametros_rsn <- coef(modelo_PC)
 ```
 
 
-Ahora utilizaremos los parámetros extraidos empezando con los valores del ajuste no linear de mínimos cuadrados (*nls*). 
+Ahora utilizaremos los parámetros extraidos empezando con los valores del ajuste no linear de mínimos cuadrados (*nls*). Esta parte es generalmente no requerida ya que se pueden utilizar los parámetros obtenidos para graficar la función de crecimiento logístico, sin embargo, no contamos con valores para el volumen inicial. Para solucionar este problema, se podrían utilizar diferentes suposiciones para el valor del volumen inicial y elegir la que mejor se adapte al modelo. No usaremos ese método, optimizaremos el ajuste del modelo par obtener los valores del volumen inicial. 
+
+Los valores del volumen inicial no son requeridos para obtener una respuesta. Sin embargo se necesita ya que el comando *nls* utiliza el método de gradiente descendiente. Éste método, al ser un algoritmo de minimización, puede encontrar los minimos locales pero no los mínimos globales deseados. 
+
+Identificamos la capacidad de carga con el comando summary. *¿Qué podemos decir acerca del comportamiento de las especies de largo plazo?*
+
+
+
+```{r}
+summary(Paramecium_caudatum)
+
+# Transformamos los paráetros a una escala logística 
+par_logist <- c(r = unname(rsn_pars["(Intercept)"]), 
+                K=unname(-rsn_pars["(Intercept)"]/rsn_pars["Volume_Species1"]))
+
+```
+
 
 
 
