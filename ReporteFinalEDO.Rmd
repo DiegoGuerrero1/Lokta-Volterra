@@ -143,11 +143,21 @@ Identificamos la capacidad de carga con el comando summary. *¿Qué podemos deci
 summary(Paramecium_caudatum)
 
 # Transformamos los paráetros a una escala logística 
-par_logist <- c(r = unname(rsn_pars["(Intercept)"]), 
-                K=unname(-rsn_pars["(Intercept)"]/rsn_pars["Volume_Species1"]))
+par_logist <- c(r = unname(parametros_rsn["(Intercept)"]), 
+                K=unname(-parametros_rsn["(Intercept)"]/parametros_rsn["Volume_Species1"]))
 
 ```
+ Ajustando con el comando nls: 
+ 
+```{r}
+modelo_nls <- nls(Volume_Species1 ~ get_logistic(time = Day, N0, r,K), 
+                  data = Paramecium_caudatum, 
+                  start = c(N0 = unname(Paramecium_caudatum$Volume_Species1[which.min(Paramecium_caudatum$Day)]), r = unname(par_logist["r"]), K = unname(par_logist["K"])))
 
+?get_logistic
+
+```
+ 
 
 
 
