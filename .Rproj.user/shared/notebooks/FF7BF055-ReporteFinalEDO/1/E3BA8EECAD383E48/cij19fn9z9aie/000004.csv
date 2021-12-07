@@ -1,0 +1,7 @@
+"0","# Transformamos los paráetros a una escala logística 
+par_logist <- c(r = unname(parametros_rsn[""(Intercept)""]), 
+                K=unname(-parametros_rsn[""(Intercept)""]/rsn_pars[""Volume_Species1""]))
+"
+"2","Error in unname(-parametros_rsn[""(Intercept)""]/rsn_pars[""Volume_Species1""]) : 
+  object 'rsn_pars' not found
+"

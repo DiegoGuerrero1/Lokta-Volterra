@@ -1,0 +1,174 @@
+---
+title: "LOKTA-VOLTERRA Reporte"
+author: "Diego Guerrero"
+date: "11/29/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Proyecto final Ecuaciones Diferenciales Ordinarias: Ajustando el modelo de Lotka - Volterra a datos de una serie de tiempo con el paquete gauseR. 
+
+*Resumewn: *
+## DESCRIPCIÓN DEL ESCENARIO 
+### Introducción 
+## Ajustando el modelo matemático a los datos 
+### Parte 1: Crecimiento logístico de una especie 
+
+Se utilizará el dataset **Paramecium caudatum** incluido en el paquete de gauseR.Se trata de una especie protista unicelular en el phylum Ciliphora, esta especie es muy abundante en ambientes marinos, salobres y agua dulce. Gause ha crecido esta especie en un monocultivo, y la información se puede encontrar en el paquete gauseR bajo el nombre de gause_1934_sciende_f02_03. Este archivo contiene datos de ambas especies **Paramecium caudatum** y **Paramecium aurelia** en un monocultivo y mezclados.
+
+#### Visualizando los datos de monocultivo
+
+```{r}
+library(gauseR)
+require(gauseR)
+library(ggplot2)
+
+data("gause_1934_science_f02_03")
+#Exploramos nuestros datos 
+View(gause_1934_science_f02_03)
+summary(gause_1934_science_f02_03)
+
+Paramecium_caudatum <- gause_1934_science_f02_03[gause_1934_science_f02_03$Treatment == "Pc",] #Creamos un subset de sólo los monocultivos de Paraceum Caudatum
+
+View(Paramecium_caudatum) #Checamos dataset, debería contener sólo datos de Paraceum caudatum.
+names(Paramecium_caudatum) #Contiene columnas "Day" y "Volume_Species1"
+#Graficamos las columnas, volumen... (y) vs Day(x)
+class(Paramecium_caudatum)
+plot(Paramecium_caudatum$Volume_Species1~Paramecium_caudatum$Day) #Graficamos sin ggplot2
+
+#Para visualizar mejor los datos se utilizará ggplot2.
+
+ggplot(Paramecium_caudatum, aes(Day, Volume_Species1))+
+  geom_point() #graficamos con puntos por medio de ggplot2
+
+ggplot(Paramecium_caudatum, aes(Day, Volume_Species1))+
+  geom_path() #graficamos con linea para ver mejor la tendencia de los datos
+
+
+
+
+```
+
+se puede observar que los datos presentan un crecimiento logísitico. Considerando la ecuación siquiente: 
+$$ \frac{dN}{dt} = rN(1 - \frac{N}{K})=N(r - sN) $$
+
+
+
+Donde r es la taza de crecimiento intrínsica (la tasa neta en la cual los nuevos individuos son itroducidos a la población cuando la pobalción esta esparcida desvanecidamente), **s** es la dependencia del para %>% metro de densidad (el cual refleja como el tamaño de la población afecta la tasa en general), y K = r/s es la capacidad de carga (máximo tamaño de población)(Lehman **et al.**, 2019).
+
+Taza de crecimiento per-cápita: 
+
+$$\frac{dN}{Ndt} = (r - sN)$$ (4)
+
+El lado derecho de la ecuación es un simple ecuación lineal, esto supone una ventaja cuando se analizan datos empíricos, ya que los parámetros se pueden estimar por medio de una regresión ordinaria de mínimos cuadrados  de las tasas de crecimiento contra la abundancia de las especies. Por lo tanto, si clacualmos la tasa de crecimiento per-cápita usando los datos, podemos encontrar una regresión lineal que se ajuste a esos datos. Para encontrar los datos sobre el crecimiento per-cápita, usaremos las ecuaciones diferenciales: 
+$$dN = N_i - N_{i-1}$$ 
+
+y: 
+
+$$dt = t_i- t_{i-1}$$
+
+Si ajustaoms una regresión lineal a los datos, ¿Qué representará el intercepto en y?
+¿Cómo encontrarás el parámetro **s** usando las propiedades de la línea? 
+¿Que representará el interecepto en x?
+
+*Todos los cálculos se pueden realizar en R*
+
+#### Cálculando la tasa de crecimiento per-cápita (dNNdt) 
+
+Se usaron las diferencias retardadas y se graficaron las contra la abundancia de N. 
+
+*¿Qué son las diferencias retardadas?*
+
+
+
+```{r}
+#Calculando abundancia retardada en tiempo usando el comando gat_lag de gauseR
+?get_lag
+
+lagged_data <- get_lag(x = Paramecium_caudatum$Volume_Species1, time = Paramecium_caudatum$Day)
+
+# Visualizamos los datos
+summary(lagged_data)
+lagged_data 
+
+# Calcualamos el crecimiento percápita (dNNdt) y lo guardamos en una coluna en el archivo de los datos. Paracium_caudatum
+
+Paramecium_caudatum$dNNdt <- percap_growth(x = lagged_data$x, laggedx = lagged_data$laggedx, dt = lagged_data$dt)
+
+#Visualizamos 
+
+head(Paramecium_caudatum)#Va está la nueva columna dNNdt 
+
+#Graficamos la relación 
+
+plot(Paramecium_caudatum$dNNdt ~ Paramecium_caudatum$Volume_Species1, xlab = "Abundancia del retraso (N)", ylab = "tasa de crecimiento per-cápita (dN/Ndt)", xlim = c(0,250), ylim = c(0,1))
+
+#Encontramos una regresión lineal para los datos 
+
+modelo_PC = lm(Paramecium_caudatum$Volume_Species1 ~ Paramecium_caudatum$dNNdt)
+
+#Graficamos el modelo como una línea roja 
+plot(modelo_PC)+abline(modelo_PC, lwd= 2, col = 2)
+
+
+
+
+```
+
+
+
+#### Extrayendo los parámetors r y s del modelo de la regresión lineal : 
+
+
+
+```{r}
+parametros_rsn <- coef(modelo_PC)
+
+
+```
+
+
+Ahora utilizaremos los parámetros extraidos empezando con los valores del ajuste no linear de mínimos cuadrados (*nls*). Esta parte es generalmente no requerida ya que se pueden utilizar los parámetros obtenidos para graficar la función de crecimiento logístico, sin embargo, no contamos con valores para el volumen inicial. Para solucionar este problema, se podrían utilizar diferentes suposiciones para el valor del volumen inicial y elegir la que mejor se adapte al modelo. No usaremos ese método, optimizaremos el ajuste del modelo par obtener los valores del volumen inicial. 
+
+Los valores del volumen inicial no son requeridos para obtener una respuesta. Sin embargo se necesita ya que el comando *nls* utiliza el método de gradiente descendiente. Éste método, al ser un algoritmo de minimización, puede encontrar los minimos locales pero no los mínimos globales deseados. 
+
+Identificamos la capacidad de carga con el comando summary. *¿Qué podemos decir acerca del comportamiento de las especies de largo plazo?*
+
+
+
+```{r}
+summary(Paramecium_caudatum)
+
+# Transformamos los paráetros a una escala logística 
+par_logist <- c(r = unname(parametros_rsn["(Intercept)"]), 
+                K=unname(-parametros_rsn["(Intercept)"]/parametros_rsn["Volume_Species1"]))
+
+```
+ Ajustando con el comando nls: 
+ 
+```{r}
+modelo_nls <- nls(Volume_Species1 ~ get_logistic(time = Day, N0, r,K), 
+                  data = Paramecium_caudatum, 
+                  start = c(N0 = unname(Paramecium_caudatum$Volume_Species1[which.min(Paramecium_caudatum$Day)]), r = unname(par_logist["r"]), K = unname(par_logist["K"])))
+
+?get_logistic
+
+```
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

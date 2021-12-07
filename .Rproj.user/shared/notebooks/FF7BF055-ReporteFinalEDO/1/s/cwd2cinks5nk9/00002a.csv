@@ -1,0 +1,5 @@
+"0","#Graficamos el modelo como una línea roja 
+plot(modelo_PC)+abline(modelo_PC, lwd= 2, col = 2)
+"
+"1","integer(0)
+"

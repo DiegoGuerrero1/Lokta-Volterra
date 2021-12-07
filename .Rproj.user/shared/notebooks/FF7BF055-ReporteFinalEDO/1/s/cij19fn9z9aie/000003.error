@@ -1,0 +1,1 @@
+{"frames":[{"func":"unname(rsn_pars[\"(Intercept)\"])","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0}],"message":"Error in unname(rsn_pars[\"(Intercept)\"]) : object 'rsn_pars' not found\n"}
