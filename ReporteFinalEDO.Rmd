@@ -195,14 +195,111 @@ El valor R de mínimos cuadrados es mayor a 0. Muy cercano a 1 indicando un ajus
 
 
 
+```{r}
+#Paramecium aurelia es la especie 2. Entonce no necesitamos volver a cargar los datos.
+View(Paramecium_caudatum)
+Paramecium_Aurelia <- gause_1934_book_f22[gause_1934_book_f22$Treatment == "Pa",]
+plot(Volume_Species2 ~ Day, data = Paramecium_Aurelia)
+     
+     
+# Le damos un vistazo a los datos.
+Paramecium_Aurelia
+
+```
+
+Tenemos que repetir todo el analisis, empezando con los datos retardados y la tasa de crecimiento per-cápita (dNNdt). 
+```{r}
+#Calculamos los datos retardados con el dataset de ParameciumAurelia
+lagged_data_Pa <- get_lag(x = Paramecium_Aurelia$Volume_Species2, time = Paramecium_Aurelia$Day )
+
+#Calculamos la tasa de crecimiento per-cápita dNNdt
+
+Paramecium_Aurelia$dNNdt <- percap_growth(x=lagged_data_Pa$x, laggedx = lagged_data_Pa$laggedx, dt = lagged_data_Pa$dt)
+
+#Graficamos la relación 
+
+plot(Paramecium_Aurelia$dNNdt ~ Paramecium_Aurelia$Volume_Species2, xlab = "Abundacia retrasada(N)", ylab = "Tasa de crecimiento per-cápita (dN/Ndt)", xlim = c(0,250), ylim= c(0,1))
+
+
+```
 
 
 
+#### Ajustando el Modelo lineal 
+
+```{r}
+# Ajustamos el modelo a la relación para obtener dNNdt ~ r +s*N
+
+modelo_Pa <- lm(dNNdt ~ Volume_Species2, data = Paramecium_Aurelia)
+
+#Graficamos el modelo 
+
+plot(modelo_Pa)+abline(modelo_Pa, lwd= 2, col = 2)
+
+```
+
+#### Parametros r y s. 
+
+```{r}
+# Extraemos los parámtros r y s
+
+Pa_rsn <- coef(modelo_Pa)
+
+```
+
+Usando los parámetros rsn como valores iniciales para la función de ajuste de mínimos cuadrados no linear (nls). 
+
+
+```{r}
+summary(Paramecium_Aurelia) #Obtener la capacida de carga K 
+
+Pa_logistitPar <- c(r = unname(Pa_rsn["(Intercept)"]), 
+                K=unname(-Pa_rsn["(Intercept)"]/Pa_rsn["Volume_Species1"])) #Pares logísticos de Paraceum Aurelia
+
+#Creando el modelo nls
+
+ <- nls(Volume_Species2 ~ get_logistic(time = Day, N0, r,K), 
+                     data = Paramecium_Aurelia,
+                     start = c(N0 = 
+                                 unname(Paramecium_Aurelia)
+                                 ) 
+                     )
+
+Pa_modelo_nls <- nls(Volume_Species2 ~ get_logistic(time = Day, N0, r,K), 
+                  data = Paramecium_Aurelia, 
+                  start = c(N0 = unname(Paramecium_Aurelia$Volume_Species2[which.min(Paramecium_Aurelia$Day)]), r = unname(par_logist["r"]), K = unname(par_logist["K"])))
+
+summary(Pa_modelo_nls) #Checamos el modelo nls
+
+#Graficamos 
+
+plot(Volume_Species2 ~ Day, data = Paramecium_Aurelia, type = "b", ylab = "volumen P.aurelia")+
+lines(time_seq, Ntest, col="red")+ text(5, 150, "Modelo")
 
 
 
+```
+#### Eficacioa del modelo para Paramecium Aurelia
+
+Con mirar la grafica ya nos damos una idea de que tan bueno es el modelo. Desde aquí ya es evidente que este modelo para la Paramecium aurelius es menor al que optvimos anteriormente para la especie Paramecium caudatum. Aún así sacamos el valor R de los mínimos cuadrados. 
+
+```{r}
+#Sacamos la muestra del modelo 
+
+Pa_modelTest <- get_logistic(time = Paramecium_Aurelia$Day, N0=coef(Pa_modelo_nls)["N0"], r = coef(Pa_modelo_nls)["r"], K = coef(Pa_modelo_nls)["K"])
+
+Pa_goodnes_fit <- test_goodness_of_fit(observed = Paramecium_Aurelia$Volume_Species2, predicted = Pa_modelTest)
 
 
+Pa_goodnes_fit #Su valor es de 0.9789978
+```
 
+
+goodnesModelFit #Encontramos que su valor es de 0.9810307
+0.9789978
+
+Confirmando nuestras sospechas, el valor de R que nos dió el modelo de Paramecium Aurelia es menor al de Paramecium Caudatum. Sin embargo esta diferencia es mínima, difiere por menos de 0.01. Sigue siendo un muy buen modelo. 
+
+### Parte II : Dos especies predador - presa 
 
 
