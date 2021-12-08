@@ -11,11 +11,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Proyecto final Ecuaciones Diferenciales Ordinarias: Ajustando el modelo de Lotka - Volterra a datos de una serie de tiempo con el paquete gauseR. 
 
-*Resumewn: *
+*Resumen: *
 ## DESCRIPCIÓN DEL ESCENARIO 
 ### Introducción 
-## Ajustando el modelo matemático a los datos 
-### Parte 1: Crecimiento logístico de una especie 
+$$\frac{dN}{dt} = aN - bNP, \ (1) \\ \frac{dP}{dt} = -cP+dNP,  \ (2)  $$
+**Ajustando el modelo matemático a los datos** 
+## Parte 1: Crecimiento logístico de una especie 
 
 Se utilizará el dataset **Paramecium caudatum** incluido en el paquete de gauseR.Se trata de una especie protista unicelular en el phylum Ciliphora, esta especie es muy abundante en ambientes marinos, salobres y agua dulce. Gause ha crecido esta especie en un monocultivo, y la información se puede encontrar en el paquete gauseR bajo el nombre de gause_1934_sciende_f02_03. Este archivo contiene datos de ambas especies **Paramecium caudatum** y **Paramecium aurelia** en un monocultivo y mezclados.
 
@@ -258,13 +259,6 @@ Pa_logistitPar <- c(r = unname(Pa_rsn["(Intercept)"]),
 
 #Creando el modelo nls
 
- <- nls(Volume_Species2 ~ get_logistic(time = Day, N0, r,K), 
-                     data = Paramecium_Aurelia,
-                     start = c(N0 = 
-                                 unname(Paramecium_Aurelia)
-                                 ) 
-                     )
-
 Pa_modelo_nls <- nls(Volume_Species2 ~ get_logistic(time = Day, N0, r,K), 
                   data = Paramecium_Aurelia, 
                   start = c(N0 = unname(Paramecium_Aurelia$Volume_Species2[which.min(Paramecium_Aurelia$Day)]), r = unname(par_logist["r"]), K = unname(par_logist["K"])))
@@ -279,7 +273,7 @@ lines(time_seq, Ntest, col="red")+ text(5, 150, "Modelo")
 
 
 ```
-#### Eficacioa del modelo para Paramecium Aurelia
+#### Eficacia del modelo para Paramecium Aurelia
 
 Con mirar la grafica ya nos damos una idea de que tan bueno es el modelo. Desde aquí ya es evidente que este modelo para la Paramecium aurelius es menor al que optvimos anteriormente para la especie Paramecium caudatum. Aún así sacamos el valor R de los mínimos cuadrados. 
 
@@ -300,6 +294,94 @@ goodnesModelFit #Encontramos que su valor es de 0.9810307
 
 Confirmando nuestras sospechas, el valor de R que nos dió el modelo de Paramecium Aurelia es menor al de Paramecium Caudatum. Sin embargo esta diferencia es mínima, difiere por menos de 0.01. Sigue siendo un muy buen modelo. 
 
-### Parte II : Dos especies predador - presa 
+## Parte II : Dos especies predador - presa 
+
+
+Ahora estudiaremos las interacciones de dos especies *Paramecium aurelia* como la presa y *Didinium nasutum* como su predador cuando son cultivadas en mezcla. Contenidos en el archivo **gause_1934_book_f32**. 
+
+Cuando las especies no se auto limittan. El modelo Lotka-Volterra muestra unas oscilaciones neutralmente estables, esto quiere decir que tienen una amplitud y frecuencia estables. Por otro lado si alguna o ambas especies se auto limitan, se presenta una disminución en periodo y amplitud hasta que llegan a un nivel estable, en otras palabras, es amortiguado. (Lehman *et al.* 2019).
+
+
+
+Queremos ajustar el modelo Lotka-Volterra a los datos obtenidos. Si graficamos los datos, podemos observar que el crecimiento de ambas especies es limitado, por lo tanto, utilizaremos el modelo generalizado de Lotka-Volterra en donde ambas especies presentan un crecimiento logístico en ausencia de predadores. siguiendo las siguentes ecuaciones: 
+
+$$\frac{dN}{dt} = N(r+aN)+bNP,\ (5) \\ \frac{dP}{dt}=P(e+cP)+dNP, \ (6)  $$
+En donde parametros r,a,b,c,d y e pueden ser negativos o positivos. Para una especie, se el parámetro *s* en (1) es negativo la población alcanza una capacidad de carga. Lo mismo puede ser observado en los sistemas (5)-(6) cuando los parámetros *b* y *d* son ambos negativos, una o ambas especies alcanzan una capacidad de carga en la cual la poblacón se mantiene constante, o constante de acuerdo co nlo que las condiciones externas lo permitan. en este caso las especies están en competencia. Lo contrario a competencia sería mutualismo, en donde cada especie ayudao ignora al crecimiento de la otra. si se presentara esto en nuestro caso predador-presa. Ambos *b* y *d* serían positivos. El último caso que se podría presentar sería que un parámetro de interacción es positivo (d) (la especie presa aumenta el creciemiento de la especie predadora) y el otro es negativo (b) (especie predadora inhibe el crecimiento de la presa)(Lehman *et al.* 2019).
+
+Usando las ideas de la parte I, podemos dividir ambos lados de las ecuaciones (5)-(6) entr *N* y *P* respectivamente, para calcular la tasa de crecimiento per-cápita de cada especie. Como resultado, el modelo se puede escribir de la siguente manera: 
+
+
+
+$$\frac{dN}{Ndt} = r + aN + bP, \ (7) \\ \frac{dP}{Pdt} = e + cP + dN. \ (8)$$
+
+Por lo tanto, una vez calculado el crecimiento per-cápita de cada especie, podemos usar la **regresión ordinaria de mínimos cuadrados** contra la abundancia de las especies para identificar olos parámetros del modelo matemático y así definir que caso de interacción predador-presa de está dando. 
+
+### Explorando los datos 
+
+```{r}
+# Paramecium_Aurelia -> Presa, Didinium nasutum -> Predador
+#Los datos de P.aurelia ya están cargados, faltarían los de D.nasutum. 
+library(gauseR)
+library(deSolve) #Paquete para resolver la ecuación diferencial
+
+View(gause_1934_book_f32) #Exploramos los datos
+
+Didinium_Nasutum <- gause_1934_book_f32 #No es necesario un filtro, ya que todo el dataset es para esas dos especies. 
+
+#plot(Volume_Species2 ~ Day, data = Paramecium_Aurelia, type = "b", ylab = "volumen P.aurelia")+
+#lines(time_seq, Ntest, col="red")+ text(5, 150, "Modelo")
+
+names(Didinium_Nasutum)
+
+plot(Individuals_Predator~Day, data = Didinium_Nasutum, type="b", ylab = "Volumen", xlab = "Tiempo (Días)",col="red") + lines(Individuals_Prey~Day, type = "b",data = Didinium_Nasutum, col = "blue") + legend("topleft", c("Predador(D. nasutum)", "Presa (P. aurelia)"), fill = c("blue", "red"))
+
+
+
+```
+Al graficar los datos parece que la interacción de las expecies es **mutualista**. En específico la presa depende de la predadora, pues si se ve un aumento en la D. nasutum, se aprecia un crecimiento un poco retardado de la P. aurelia. Pero sigue el mismo patrón, si crece la presa, dos días después aproximadamente crece la predadora. 
+
+### Ajustando el modelo Lotka-Volterra en la forma de las ecuaciones (7)-(8) 
+
+### Prediciendo el comporamiento de las especies
+
+### Reflección sobre los descubrimientos
+
+## Parte III
+Finalmente, rastrearemos las interacciones competitivas entre *Paramecium aurelia* y *Paramecium caudatum*. Analizaremos su crecimiento en mezcla, el cual se encuentra en el miusmo archivo que se utilizó en la parte I: **gause_1934_science_f02_03**. 
+
+### Ajustando al modelo Lotka-Volterra.
+Se utilizó el programa de R para el sistme predador presa y modificamos para ajustar al modelo Lotka-volterra a los datos de ambas especies. 
+
+### Diferencias en el comportamiento de las especies. 
+¿Hay diferencia entre el compartamiendo de las especies en la parte I y II con respecto a esta?
+
+### Comportamiento de largo plazo entre las especies. 
+¿Cuál será el comportamiento de ambas especies a largo plazo?
+
+
+## Referencias 
+
+
+Gause, G. F. 1934a. Experimental Analysis of Vito Volterra's Mathematical Theory of the
+Struggle for Existence, *Science*, New Series, 79(2036) (Jan. 5, 1934): 16-17. Published by:
+American Association for the Advancement of Science Stable.
+http://www.jstor.org/stable/1660803.
+
+Gause, G. F. 1934b. *The Struggle for Existence*. Baltimore: The Williams and Wilkins Company.
+p. 163.
+
+Lehman, Clarence; Loberg, Shelby; Clark, Adam. 2019. *Quantitative Ecology: A New Unified
+Approach*. University of Minnesota Libraries Publishing. Retrieved from the University of
+Minnesota Digital Conservancy. https://hdl.handle.net/11299/204551.
+
+Mühlbauer L.K., M.Schulze, W.S.Harpole, and A.T.Clark. 2020. gauseR: Simple methods for
+fitting Lotka-Volterra models describing Gause’s “Struggle for Existence.” *Ecology and Evolution*. 10:13275–13283. https://doi.org/10.1002/ece3.6926 .
+
+R project. 2021. https://www.r-project.org/.
+
+
+
+
+
 
 
