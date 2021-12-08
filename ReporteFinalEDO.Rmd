@@ -333,7 +333,7 @@ Didinium_Nasutum <- gause_1934_book_f32 #No es necesario un filtro, ya que todo 
 
 names(Didinium_Nasutum)
 
-plot(Individuals_Predator~Day, data = Didinium_Nasutum, type="b", ylab = "Volumen", xlab = "Tiempo (Días)",col="red") + lines(Individuals_Prey~Day, type = "b",data = Didinium_Nasutum, col = "blue") + legend("topleft", c("Predador(D. nasutum)", "Presa (P. aurelia)"), fill = c("blue", "red"))
+plot(Individuals_Prey~Day, type = "b",data = Didinium_Nasutum, ylab = "Volumen", xlab = "Tiempo (Días)", col = "blue") + lines(Individuals_Predator~Day, data = Didinium_Nasutum, type="b",col="red") + legend("topright", c("Predador(D. nasutum)", "Presa (P. aurelia)"), fill = c("blue", "red"))
 
 
 
