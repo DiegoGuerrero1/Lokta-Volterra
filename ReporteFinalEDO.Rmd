@@ -54,36 +54,37 @@ ggplot(Paramecium_caudatum, aes(Day, Volume_Species1))+
 
 ```
 
-se puede observar que los datos presentan un crecimiento logísitico. Considerando la ecuación siquiente: 
+se puede observar que los datos presentan un crecimiento logísitico. Esto significa que el crecimiento tiene una capacidad de carga de aproximadamente 222.35 en volumen. Considerando la ecuación siquiente: 
 $$ \frac{dN}{dt} = rN(1 - \frac{N}{K})=N(r - sN) $$
 
 
 
-Donde r es la taza de crecimiento intrínsica (la tasa neta en la cual los nuevos individuos son itroducidos a la población cuando la pobalción esta esparcida desvanecidamente), **s** es la dependencia del para %>% metro de densidad (el cual refleja como el tamaño de la población afecta la tasa en general), y K = r/s es la capacidad de carga (máximo tamaño de población)(Lehman **et al.**, 2019).
+Donde r es la tasa de crecimiento intrínseca (La tasa de crecimiento neta cuando la población está esparcida y se tienen exceso de recursos), **s** es la dependencia del para %>% metro de densidad (el cual refleja como el tamaño de la población afecta la tasa en general), y K = r/s es la capacidad de carga (máximo tamaño de población)(Lehman **et al.**, 2019).
 
 Taza de crecimiento per-cápita: 
 
 $$\frac{dN}{Ndt} = (r - sN)$$ (4)
 
-El lado derecho de la ecuación es un simple ecuación lineal, esto supone una ventaja cuando se analizan datos empíricos, ya que los parámetros se pueden estimar por medio de una regresión ordinaria de mínimos cuadrados  de las tasas de crecimiento contra la abundancia de las especies. Por lo tanto, si clacualmos la tasa de crecimiento per-cápita usando los datos, podemos encontrar una regresión lineal que se ajuste a esos datos. Para encontrar los datos sobre el crecimiento per-cápita, usaremos las ecuaciones diferenciales: 
+
+El lado derecho de la ecuación es un simple ecuación lineal, esto supone una ventaja cuando se analizan datos empíricos, ya que los parámetros se pueden estimar por medio de una regresión lineal de mínimos cuadrados  de las tasas de crecimiento contra la abundancia de las especies. Por lo tanto, si calculamos la tasa de crecimiento per-cápita usando los datos, podemos encontrar una regresión lineal que se ajuste a esos datos. Para encontrar los datos sobre el crecimiento per-cápita, usaremos las ecuaciones diferenciales: 
+
 $$dN = N_i - N_{i-1}$$ 
 
 y: 
 
 $$dt = t_i- t_{i-1}$$
 
-Si ajustaoms una regresión lineal a los datos, ¿Qué representará el intercepto en y?
+
+Si ajustamos una regresión lineal a los datos, ¿Qué representará el intercepto en y?
 ¿Cómo encontrarás el parámetro **s** usando las propiedades de la línea? 
-¿Que representará el interecepto en x?
+¿Qué representará el intercepto en x?
+
 
 *Todos los cálculos se pueden realizar en R*
 
 #### Cálculando la tasa de crecimiento per-cápita (dNNdt) 
 
 Se usaron las diferencias retardadas y se graficaron las contra la abundancia de N. 
-
-*¿Qué son las diferencias retardadas?*
-
 
 
 ```{r}
@@ -122,7 +123,7 @@ plot(modelo_PC)+abline(modelo_PC, lwd= 2, col = 2)
 
 
 
-#### Extrayendo los parámetors r y s del modelo de la regresión lineal : 
+#### Extrayendo los parámetros r y s del modelo de la regresión lineal : 
 
 
 
@@ -133,11 +134,13 @@ parametros_rsn <- coef(modelo_PC)
 ```
 
 
-Ahora utilizaremos los parámetros extraidos empezando con los valores del ajuste no linear de mínimos cuadrados (*nls*). Esta parte es generalmente no requerida ya que se pueden utilizar los parámetros obtenidos para graficar la función de crecimiento logístico, sin embargo, no contamos con valores para el volumen inicial. Para solucionar este problema, se podrían utilizar diferentes suposiciones para el valor del volumen inicial y elegir la que mejor se adapte al modelo. No usaremos ese método, optimizaremos el ajuste del modelo par obtener los valores del volumen inicial. 
+Ahora utilizaremos los parámetros extraídos empezando con los valores del ajuste no lineal de mínimos cuadrados (*nls*). Esta parte es generalmente no requerida ya que se pueden utilizar los parámetros obtenidos para graficar la función de crecimiento logístico, sin embargo, no contamos con valores para el volumen inicial. Para solucionar este problema, se podrían utilizar diferentes suposiciones para el valor del volumen inicial y elegir la que mejor se adapte al modelo. Decidimos no usar ese método, optimizaremos el ajuste del modelo para obtener los valores del volumen inicial. 
 
-Los valores del volumen inicial no son requeridos para obtener una respuesta. Sin embargo se necesita ya que el comando *nls* utiliza el método de gradiente descendiente. Éste método, al ser un algoritmo de minimización, puede encontrar los minimos locales pero no los mínimos globales deseados. 
+Los valores del volumen inicial no son requeridos para obtener una respuesta. Sin embargo se necesita ya que el comando *nls* utiliza el método de gradiente descendiente. Éste método, al ser un algoritmo de minimización, puede encontrar los mínimos locales pero no los mínimos globales deseados.
+ 
 
 Identificamos la capacidad de carga con el comando summary. *¿Qué podemos decir acerca del comportamiento de las especies de largo plazo?*
+El comportamiento de las especies a largo plazo va a ser bastante similar al que encontramos en las gráficas anteriores. Ya que la capacidad de carga suele ser un límite bastante rígido (Ya que involucra recursos de todo tipo) este no va a cambiar a menos que se expongan a las poblaciones a un cambio drástico de ambiente. 
 
 
 
@@ -208,8 +211,10 @@ plot(Volume_Species2 ~ Day, data = Paramecium_Aurelia)
 Paramecium_Aurelia
 
 ```
+En la gráfica se puede observar un crecimiento logístico normal, muy similar a la especie #1.
 
-Tenemos que repetir todo el analisis, empezando con los datos retardados y la tasa de crecimiento per-cápita (dNNdt). 
+Tenemos que repetir todo el análisis, empezando con los datos retardados y la tasa de crecimiento per-cápita (dNNdt). 
+
 ```{r}
 #Calculamos los datos retardados con el dataset de ParameciumAurelia
 lagged_data_Pa <- get_lag(x = Paramecium_Aurelia$Volume_Species2, time = Paramecium_Aurelia$Day )
@@ -274,9 +279,10 @@ lines(time_seq, Ntest, col="red")+ text(5, 150, "Modelo")
 
 
 ```
-#### Eficacia del modelo para Paramecium Aurelia
+#### Eficacia del modelo para Paramecium Aurelius
 
-Con mirar la grafica ya nos damos una idea de que tan bueno es el modelo. Desde aquí ya es evidente que este modelo para la Paramecium aurelius es menor al que optvimos anteriormente para la especie Paramecium caudatum. Aún así sacamos el valor R de los mínimos cuadrados. 
+Con mirar la gráfica ya nos damos una idea de qué tan bueno es el modelo. Desde aquí ya es evidente que este modelo para la Paramecium aurelius es menor al que obtuvimos anteriormente para la especie Paramecium caudatum. Aún así sacamos el valor R de los mínimos cuadrados. 
+
 
 ```{r}
 #Sacamos la muestra del modelo 
@@ -300,23 +306,22 @@ Confirmando nuestras sospechas, el valor de R que nos dió el modelo de Parameci
 
 Ahora estudiaremos las interacciones de dos especies *Paramecium aurelia* como la presa y *Didinium nasutum* como su predador cuando son cultivadas en mezcla. Contenidos en el archivo **gause_1934_book_f32**. 
 
-Cuando las especies no se auto limittan. El modelo Lotka-Volterra muestra unas oscilaciones neutralmente estables, esto quiere decir que tienen una amplitud y frecuencia estables. Por otro lado si alguna o ambas especies se auto limitan, se presenta una disminución en periodo y amplitud hasta que llegan a un nivel estable, en otras palabras, es amortiguado. (Lehman *et al.* 2019).
+Cuando las especies no se auto limitan. El modelo Lotka-Volterra muestra unas oscilaciones neutralmente estables, esto quiere decir que tienen una amplitud y frecuencia estables. Por otro lado si alguna o ambas especies se auto limitan, se presenta una disminución en periodo y amplitud hasta que llegan a un nivel estable, en otras palabras, es amortiguado. (Lehman *et al.* 2019).
 
 
 
-Queremos ajustar el modelo Lotka-Volterra a los datos obtenidos. Si graficamos los datos, podemos observar que el crecimiento de ambas especies es limitado, por lo tanto, utilizaremos el modelo generalizado de Lotka-Volterra en donde ambas especies presentan un crecimiento logístico en ausencia de predadores. siguiendo las siguentes ecuaciones: 
+Queremos ajustar el modelo Lotka-Volterra a los datos obtenidos. Si graficamos los datos, podemos observar que el crecimiento de ambas especies es limitado, por lo tanto, utilizaremos el modelo generalizado de Lotka-Volterra en donde ambas especies presentan un crecimiento logístico en ausencia de predadores. siguiendo las siguientes ecuaciones: 
 
 $$\frac{dN}{dt} = N(r+aN)+bNP,\ (5) \\ \frac{dP}{dt}=P(e+cP)+dNP, \ (6)  $$
-En donde parametros r,a,b,c,d y e pueden ser negativos o positivos. Para una especie, se el parámetro *s* en (1) es negativo la población alcanza una capacidad de carga. Lo mismo puede ser observado en los sistemas (5)-(6) cuando los parámetros *b* y *d* son ambos negativos, una o ambas especies alcanzan una capacidad de carga en la cual la poblacón se mantiene constante, o constante de acuerdo co nlo que las condiciones externas lo permitan. en este caso las especies están en competencia. Lo contrario a competencia sería mutualismo, en donde cada especie ayudao ignora al crecimiento de la otra. si se presentara esto en nuestro caso predador-presa. Ambos *b* y *d* serían positivos. El último caso que se podría presentar sería que un parámetro de interacción es positivo (d) (la especie presa aumenta el creciemiento de la especie predadora) y el otro es negativo (b) (especie predadora inhibe el crecimiento de la presa)(Lehman *et al.* 2019).
+En donde los parámetros r,a,b,c,d y e pueden ser negativos o positivos. Para una especie, se el parámetro *s* en (1) es negativo la población alcanza una capacidad de carga. Lo mismo puede ser observado en los sistemas (5)-(6) cuando los parámetros *b* y *d* son ambos negativos, una o ambas especies alcanzan una capacidad de carga en la cual la población se mantiene constante, o constante de acuerdo con lo que las condiciones externas lo permitan. en este caso las especies están en competencia. Lo contrario a la competencia sería mutualismo, en donde cada especie ayuda o ignora al crecimiento de la otra. si se presentara esto en nuestro caso predador-presa. Ambos *b* y *d* serían positivos. El último caso que se podría presentar sería que un parámetro de interacción es positivo (d) (la especie presa aumenta el crecimiento de la especie predadora) y el otro es negativo (b) (especie predadora inhibe el crecimiento de la presa)(Lehman *et al.* 2019).
 
-Usando las ideas de la parte I, podemos dividir ambos lados de las ecuaciones (5)-(6) entr *N* y *P* respectivamente, para calcular la tasa de crecimiento per-cápita de cada especie. Como resultado, el modelo se puede escribir de la siguente manera: 
+Usando las ideas de la parte I, podemos dividir ambos lados de las ecuaciones (5)-(6) entre *N* y *P* respectivamente, para calcular la tasa de crecimiento per-cápita de cada especie. Como resultado, el modelo se puede escribir de la siguiente manera: 
 
 
 
 $$\frac{dN}{Ndt} = r + aN + bP, \ (7) \\ \frac{dP}{Pdt} = e + cP + dN. \ (8)$$
 
-Por lo tanto, una vez calculado el crecimiento per-cápita de cada especie, podemos usar la **regresión ordinaria de mínimos cuadrados** contra la abundancia de las especies para identificar olos parámetros del modelo matemático y así definir que caso de interacción predador-presa de está dando. 
-
+Por lo tanto, una vez calculado el crecimiento per-cápita de cada especie, podemos usar la **regresión ordinaria de mínimos cuadrados** contra la abundancia de las especies para identificar los parámetros del modelo matemático y así definir que caso de interacción predador-presa se está dando. 
 ### Explorando los datos 
 
 ```{r}
@@ -338,10 +343,11 @@ plot(Individuals_Prey~Day, type = "b",data = Didinium_Nasutum, ylab = "Volumen",
 
 
 ```
-Al graficar los datos parece que la interacción de las expecies es **mutualista**. En específico la presa depende de la predadora, pues si se ve un aumento en la D. nasutum, se aprecia un crecimiento un poco retardado de la P. aurelia. Pero sigue el mismo patrón, si crece la presa, dos días después aproximadamente crece la predadora. 
+Al graficar los datos parece que la interacción de las especies es **mutualista**. En específico la presa depende de la depredadora, pues si se ve un aumento en la D. nasutum, se aprecia un crecimiento un poco retardado de la P. aurelia. Pero sigue el mismo patrón, si crece la presa, dos días después aproximadamente crece la predadora. 
 
 
 Creamos abundancias retardadas en el tiempo para ambos predador y presa: 
+
 
 ```{r}
 lagg_Dn_Predator <- get_lag(x = Didinium_Nasutum$Individuals_Predator, time = Didinium_Nasutum$Day)
@@ -376,7 +382,7 @@ plot(Didinium_Nasutum$dNNdt_Predator~Didinium_Nasutum$Individuals_Predator, xlab
 plot(Didinium_Nasutum$dNNdt_Prey~Didinium_Nasutum$Individuals_Prey, xlab = "Abundancia retardada(N) Presa", ylab = "Tasa de crecimiento percápita (dN/Ndt)", xlim =c(0,50), ylim = c(-2,10))
 ```
 
-*Salen tasas de crecimiento negativas*
+*Salen tasas de crecimiento negativas* Esto quiere decir que la especie tiene un proceso en el cual se pierden miembros, esto es, que su nivel de mortalidad es más alto que su nivel de natalidad. 
 
 Creando modelo para obtener dNNdt ~ r + e*N
 
@@ -466,13 +472,6 @@ Mühlbauer L.K., M.Schulze, W.S.Harpole, and A.T.Clark. 2020. gauseR: Simple met
 fitting Lotka-Volterra models describing Gause’s “Struggle for Existence.” *Ecology and Evolution*. 10:13275–13283. https://doi.org/10.1002/ece3.6926 .
 
 R project. 2021. https://www.r-project.org/.
-
-
-
-
-
-
-
 
 
 
