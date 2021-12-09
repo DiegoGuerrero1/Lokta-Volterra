@@ -23,6 +23,7 @@ Se utilizará el dataset **Paramecium caudatum** incluido en el paquete de gause
 #### Visualizando los datos de monocultivo
 
 ```{r}
+install.packages("gauseR")
 library(gauseR)
 require(gauseR)
 library(ggplot2)
@@ -465,6 +466,9 @@ Mühlbauer L.K., M.Schulze, W.S.Harpole, and A.T.Clark. 2020. gauseR: Simple met
 fitting Lotka-Volterra models describing Gause’s “Struggle for Existence.” *Ecology and Evolution*. 10:13275–13283. https://doi.org/10.1002/ece3.6926 .
 
 R project. 2021. https://www.r-project.org/.
+
+
+
 
 
 
