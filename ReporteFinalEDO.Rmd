@@ -328,17 +328,104 @@ View(gause_1934_book_f32) #Exploramos los datos
 
 Didinium_Nasutum <- gause_1934_book_f32 #No es necesario un filtro, ya que todo el dataset es para esas dos especies. 
 
-#plot(Volume_Species2 ~ Day, data = Paramecium_Aurelia, type = "b", ylab = "volumen P.aurelia")+
-#lines(time_seq, Ntest, col="red")+ text(5, 150, "Modelo")
+
 
 names(Didinium_Nasutum)
 
-plot(Individuals_Prey~Day, type = "b",data = Didinium_Nasutum, ylab = "Volumen", xlab = "Tiempo (Días)", col = "blue") + lines(Individuals_Predator~Day, data = Didinium_Nasutum, type="b",col="red") + legend("topright", c("Predador(D. nasutum)", "Presa (P. aurelia)"), fill = c("blue", "red"))
+plot(Individuals_Prey~Day, type = "b",data = Didinium_Nasutum, ylab = "Volumen", xlab = "Tiempo (Días)", col = "blue") + lines(Individuals_Predator~Day, data = Didinium_Nasutum, type="b",col="red") + legend("topright", c("Predador(D. nasutum)", "Presa (P. aurelia)"), fill = c("blue", "red"), type = "b")
 
 
 
 ```
 Al graficar los datos parece que la interacción de las expecies es **mutualista**. En específico la presa depende de la predadora, pues si se ve un aumento en la D. nasutum, se aprecia un crecimiento un poco retardado de la P. aurelia. Pero sigue el mismo patrón, si crece la presa, dos días después aproximadamente crece la predadora. 
+
+
+Creamos abundancias retardadas en el tiempo para ambos predador y presa: 
+
+```{r}
+lagg_Dn_Predator <- get_lag(x = Didinium_Nasutum$Individuals_Predator, time = Didinium_Nasutum$Day)
+
+lagg_Dn_Prey <- get_lag(x = Didinium_Nasutum$Individuals_Prey, time = Didinium_Nasutum$Day)
+
+```
+
+Calculando la tasa de crecimiento per-cápita(dNNdt).
+
+```{r}
+#Para simplicidad, separamos los datasets. Uno para la presa y otro para el predador. 
+# Paramecium_Aurelia -> Presa, Didinium nasutum -> Predador
+
+#Crecimiento percápita del Predador 
+Didinium_Nasutum$dNNdt_Predator <- percap_growth(x = lagg_Dn_Predator$x, laggedx = lagg_Dn_Predator$laggedx, dt = lagg_Dn_Predator$dt)
+
+
+#Crecimiento percápita de la presa. 
+Didinium_Nasutum$dNNdt_Prey <- percap_growth(x = lagg_Dn_Prey$x, laggedx = lagg_Dn_Prey$laggedx, dt = lagg_Dn_Prey$dt)
+
+```
+
+
+
+Graficamos las relaciones 
+
+```{r}
+
+plot(Didinium_Nasutum$dNNdt_Predator~Didinium_Nasutum$Individuals_Predator, xlab = "Abundancia retardada(N) Predador", ylab = "Tasa de crecimiento percápita (dN/Ndt)", xlim =c(0,50), ylim = c(-2,10))
+
+plot(Didinium_Nasutum$dNNdt_Prey~Didinium_Nasutum$Individuals_Prey, xlab = "Abundancia retardada(N) Presa", ylab = "Tasa de crecimiento percápita (dN/Ndt)", xlim =c(0,50), ylim = c(-2,10))
+```
+
+*Salen tasas de crecimiento negativas*
+
+Creando modelo para obtener dNNdt ~ r + e*N
+
+```{r}
+Modelo_Dn_Predator <- lm(dNNdt_Predator ~ Individuals_Predator, data = Didinium_Nasutum)
+
+Modelo_Dn_Prey <- lm(dNNdt_Prey ~ Individuals_Predator, data = Didinium_Nasutum)
+
+
+plot(Modelo_Dn_Predator)+
+abline(Modelo_Dn_Predator, lwd = 2, col = 2)
+
+
+plot(Modelo_Dn_Prey)+
+abline(Modelo_Dn_Prey, lwd = 2, col = 2)
+
+#Regresión logística 
+
+#Extraemos los valores del modelo
+
+parametros_Dn_Predador <- coef(Modelo_Dn_Predator)
+parametros_Dn_Presa <- coef(Modelo_Dn_Prey)
+
+#Pares Logísticos 
+
+Dn_Predator_lgp <- c(r = unname(parametros_Dn_Predador["(Intercept)"]),
+                     K=unname(-parametros_Dn_Predador["(Intercept)"]/parametros_Dn_Predador["Individuals_Predator"]))
+
+Dn_Presa_lgp <- c(r = unname(parametros_Dn_Presa["(Intercept)"]),
+                     K=unname(-parametros_Dn_Presa["(Intercept)"]/parametros_Dn_Presa["Individuals_Predator"]))
+
+#modelando el ordinary linear last squares regression
+
+
+?nls
+
+```
+
+Como se puede observar, el ajuste del modelo no es muy bueno. Lo optimizaremos. 
+
+Optimizando el modelo: 
+
+```{r}
+
+optim(parametros_Dn_Predador, Modelo_Dn_Predator)
+
+?optim
+
+```
+
 
 ### Ajustando el modelo Lotka-Volterra en la forma de las ecuaciones (7)-(8) 
 
